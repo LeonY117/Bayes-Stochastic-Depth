@@ -29,7 +29,7 @@ def conv3x3(
     )
 
 
-def conv1x1(inp: int, oup: int, stride: int = 1) -> nn.Conv2d:
+def conv1x1(inp: int, oup: int, stride: int = 1, groups: int = 1) -> nn.Conv2d:
     """1x1 convolution"""
     return nn.Conv2d(inp, oup, kernel_size=1, stride=stride, bias=False)
 
@@ -55,11 +55,11 @@ class BasicBlock(nn.Module):
         self.dropout_p = 0.0 if dropout_p is None else dropout_p
         self.sd_p = 0.0 if sd_p is None else sd_p
 
-        self.relu = nn.ReLU(inplace=True)
         self.conv1 = conv3x3(inp, oup, stride, groups)
         self.bn1 = norm_layer(oup)
         self.conv2 = conv3x3(oup, oup, 1, groups)
         self.bn2 = norm_layer(oup)
+        self.relu = nn.ReLU(inplace=True)
         self.downsample = downsample  # to match dimensions when downsampling
 
         self.dropout = nn.Dropout2d(self.dropout_p)
@@ -106,7 +106,6 @@ class Bottleneck(nn.Module):
         self.dropout_p = 0.0 if dropout_p is None else dropout_p
         self.sd_p = 0.0 if sd_p is None else sd_p
 
-        self.relu = nn.ReLU(inplace=True)
         self.conv1 = conv1x1(inp, oup, 1, groups)
         self.bn1 = norm_layer(oup)
         # stride placed here rather than on 1x1, following torch implementation
@@ -114,6 +113,7 @@ class Bottleneck(nn.Module):
         self.bn2 = norm_layer(oup)
         self.conv3 = conv1x1(oup, oup * self.expansion, 1, groups)
         self.bn3 = norm_layer(oup * self.expansion)
+        self.relu = nn.ReLU(inplace=True)
         self.downsample = downsample  # to match dimensions when downsampling
         self.stride = stride
 
@@ -154,7 +154,7 @@ class _DropoutConfig:
             return [p * (i + 1) / sum(stages) for i in range(sum(stages))]
         elif mode == "constant":
             return [p for _ in range(sum(stages))]
-        elif mode == "last":
+        elif mode == "classifier":
             # one extra prob for the classifer
             return [0.0 for _ in range(sum(stages))] + [p]
         elif mode == "none":
@@ -224,7 +224,7 @@ class _ResNet(nn.Module):
         for i, n in enumerate(stages):
             stride = 1 if i == 0 else 2
 
-            in_width = 64 if i == 0 else stage_widths[i - 1]
+            in_width = 64 if i == 0 else stage_widths[i - 1] * block.expansion
             setattr(
                 self,
                 f"layer{i+1}",
@@ -237,6 +237,10 @@ class _ResNet(nn.Module):
                     block_id=sum(stages[:i]),
                 ),
             )
+
+        self.classifier_dropout = None
+        if len(self.dropout_config.probs) > sum(self.stages):
+            self.classifier_dropout = nn.Dropout(self.dropout_config.probs[-1])
 
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
         self.fc = nn.Linear(stage_widths[-1] * block.expansion, num_classes)
@@ -311,14 +315,15 @@ class _ResNet(nn.Module):
 
         x = self.avgpool(x)
         x = torch.flatten(x, 1)
-        if len(self.dropout_config.probs) > sum(self.stages):
-            x = nn.Dropout(self.dropout_config.probs[-1])(x)
+        if self.classifier_dropout is not None:
+            self.classifier_dropout(x)
         x = self.fc(x)
         return x
 
 
 def resnet(
     resnet_name: str,
+    num_classes: int = 10,
     dropout_mode: str = "none",
     dropout_p: float = 0.0,
     sd_mode: str = "none",
@@ -332,12 +337,14 @@ def resnet(
     if resnet_name not in resnet_configs:
         raise ValueError(f"Unknown resnet name: {resnet_name}")
 
-    dropout_config = DropoutConfig([2, 2, 2, 2], dropout_p, dropout_mode)
-    sd_config = SdConfig([2, 2, 2, 2], sd_p, sd_mode)
-
     stages, block = resnet_configs[resnet_name]
 
-    return _ResNet(block, stages, drop_cfg=dropout_config, sd_cfg=sd_config)
+    dropout_config = DropoutConfig(stages, dropout_p, dropout_mode)
+    sd_config = SdConfig(stages, sd_p, sd_mode)
+
+    return _ResNet(
+        block, stages, num_classes, drop_cfg=dropout_config, sd_cfg=sd_config
+    )
 
 
 resnet_configs = {
