@@ -8,6 +8,8 @@ from torchvision.ops import StochasticDepth
 
 from dataclasses import dataclass
 
+from .Bayesian_net import Bayesian_net
+
 __all__ = [
     "resnet",
 ]
@@ -189,7 +191,7 @@ class SdConfig(_SdConfig):
         super().__init__(self.initiate_probs(stages, p, mode))
 
 
-class _ResNet(nn.Module):
+class _ResNet(Bayesian_net):
     def __init__(
         self,
         block: Type[Union[BasicBlock, Bottleneck]],
