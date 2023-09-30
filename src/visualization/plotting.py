@@ -6,8 +6,9 @@ from torch.utils.data import Dataset
 
 __all__ = ["imshow_image", "unnormalize", "show_cifar_images"]
 
-def imshow_image(img, unnormalize: bool = True) -> None:
-    if unnormalize:
+
+def imshow_image(img, inv_norm: bool = True) -> None:
+    if inv_norm:
         img = unnormalize(img)
     plt.imshow(img.cpu().permute(1, 2, 0))
     plt.axis("off")

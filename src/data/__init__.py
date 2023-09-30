@@ -1,3 +1,2 @@
-from .memory_dataset import MemoryDataset
-from .transforms import *
 from .utils import *
+from .preprocess import load_CIFAR

@@ -306,6 +306,16 @@ class _ResNet(Bayesian_net):
     def _get_sd_p(self, id: int) -> float:
         return self.sd_config.probs[id]
 
+    def expected_layers(self) -> int:
+        """
+        Compute the expected depth with stochastic depth
+        """
+        sd_config = self.sd_config
+        num_layers = sum([1 - p for p in sd_config.probs])
+        # multiply by 2 because conv + bn, +2 for first conv and bn
+        num_layers = num_layers * 2 + 2
+        return num_layers
+
     def forward(self, x: Tensor) -> Tensor:
         x = self.conv1(x)
         x = self.bn1(x)
