@@ -1,5 +1,8 @@
 # dataset
 data/*
+# google drive
+.tmp.drivedownload*
+.tmp.driveupload*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
