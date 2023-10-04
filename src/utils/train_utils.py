@@ -2,7 +2,29 @@ import torch.optim as optim
 from typing import Optional
 from utils.loss import CELoss, FocalLoss
 
-__all__ = ["parse_scheduler", "parse_loss"]
+from typing import List
+
+__all__ = ["parse_scheduler", "parse_loss", "get_dataset_classes"]
+
+
+def get_dataset_classes(dataset: str) -> List[str]:
+    if dataset == "cifar10":
+        classes = [
+            "plane",
+            "car",
+            "bird",
+            "cat",
+            "deer",
+            "dog",
+            "frog",
+            "horse",
+            "ship",
+            "truck",
+        ]
+    else:
+        raise ValueError(f"Dataset {dataset} not supported")
+    return classes
+
 
 def parse_scheduler(
     optimizer, scheduler_name: str, total_epochs=Optional[float], **kwargs
