@@ -74,7 +74,7 @@ def show_cifar_images(
     plt.show()
 
 
-def plot_loss_history(loss_history: Dict[str, List[float]], title: str = None) -> None:
+def plot_loss_history(loss_history: Dict[str, List[float]]) -> None:
     """
     Plot loss history
     Args:
@@ -84,14 +84,10 @@ def plot_loss_history(loss_history: Dict[str, List[float]], title: str = None) -
     plt.plot(loss_history["val"], label="val")
     plt.xlabel("Epoch")
     plt.ylabel("Loss")
-    if title is not None:
-        plt.title(title)
-    else:
-        plt.title("Loss")
     plt.legend()
 
 
-def plot_acc_history(acc_history: Dict[str, List[float]], title: str = None) -> None:
+def plot_acc_history(acc_history: Dict[str, List[float]]) -> None:
     """
     Plot accuracy history
     Args:
@@ -102,15 +98,11 @@ def plot_acc_history(acc_history: Dict[str, List[float]], title: str = None) -> 
     plt.xlabel("Epoch")
     plt.ylabel("Accuracy")
     plt.ylim(0, 1)
-    if title is not None:
-        plt.title(title)
-    else:
-        plt.title("Accuracy")
     plt.legend()
 
 
 def plot_per_class_acc_history(
-    acc_history: Dict[str, List[float]], classes: List[str], title: str = None
+    acc_history: Dict[str, List[float]], classes: List[str]
 ) -> None:
     """
     Plots per-class accuracy history
@@ -123,10 +115,6 @@ def plot_per_class_acc_history(
     plt.xlabel("Epoch")
     plt.ylabel("Accuracy")
     plt.ylim(0, 1)
-    if title is not None:
-        plt.title(title)
-    else:
-        plt.title("Per-class Accuracy")
     plt.legend()
 
 
