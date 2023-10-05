@@ -8,6 +8,7 @@ __all__ = ["parse_scheduler", "parse_loss", "get_dataset_classes"]
 
 
 def get_dataset_classes(dataset: str) -> List[str]:
+    dataset = dataset.lower()
     if dataset == "cifar10":
         classes = [
             "plane",
