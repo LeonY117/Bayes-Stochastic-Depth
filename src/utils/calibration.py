@@ -6,9 +6,14 @@ from torch import nn, Tensor
 from torch.utils.data import DataLoader
 
 from tqdm import tqdm
-from .bayesian_utils import baye_eval
+from .bayesian_utils import bayes_eval
 
-__all__=["compute_calibration_errors", "_get_calibration", "_compute_calibration_statistics"]
+__all__ = [
+    "compute_calibration_errors",
+    "_get_calibration",
+    "_compute_calibration_statistics",
+]
+
 
 def _compute_calibration_statistics(total_counts, total_corrects, confs):
     """
@@ -71,7 +76,7 @@ def _get_calibration(
             elif k > 0:
                 net.set_bayes_mode(True, mode)
 
-            y_logits, y_pred = baye_eval(net, x, k)
+            y_logits, y_pred = bayes_eval(net, x, k)
             y_softmax = y_logits.softmax(dim=0)
 
             counts, corrects, conf = _get_calibration_per_prediction(
