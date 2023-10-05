@@ -1,19 +1,19 @@
 import torch
 from torch import Tensor
-from typing import Dict
+from typing import Dict, List
 
 
 class AccuracyMetric(object):
-    def __init__(self, metrics=["acc"], class_map: Dict[int, str] = None) -> None:
+    def __init__(self, metrics=["acc"], classes: List[str] = None) -> None:
         """
         Args
         ----------
         metrics: list of metrics to compute, options are ["acc", "iou"]
-        class_map: dictionary mapping class index to class name
+        classes: list containing class names
         """
         self.compute_acc = "acc" in metrics
         self.compute_iou = "iou" in metrics
-        self.class_map = class_map
+        self.classes = classes
 
     def __call__(self, confusion_matrix: Tensor) -> Dict[str, float]:
         """
@@ -38,7 +38,7 @@ class AccuracyMetric(object):
             accs = TPs / (TPs + FNs)
             avg_acc = accs.mean()
             for c in range(num_classes):
-                metrics[f"acc/{self.class_map[c]}"] = accs[c].item()
+                metrics[f"acc/{self.classes[c]}"] = accs[c].item()
             metrics["acc/avg"] = avg_acc.item()
             metrics["acc/global"] = TPs.sum().item() / (cm.sum().item() + 1e-16)
 
@@ -47,7 +47,7 @@ class AccuracyMetric(object):
             miou = ious.mean()
 
             for c in range(num_classes):
-                metrics[f"iou/{self.class_map[c]}"] = ious[c].item()
+                metrics[f"iou/{self.classes[c]}"] = ious[c].item()
             metrics["iou/mean"] = miou.item()
 
         return metrics
