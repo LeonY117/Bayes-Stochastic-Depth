@@ -29,6 +29,8 @@ def bayes_forward(
     y_pred_std_per_class : torch.tensor (c x W x H)
     y_pred_std_avg       : torch.tensor (W x H)
     """
+    assert k > 0
+
     if buffer is None:
         buffer = X.unsqueeze(0).repeat(k, 1, 1, 1)
     else:
@@ -78,6 +80,7 @@ def bayes_eval(
     y_logits             : torch.tensor (c x W x H)
     y_pred               : torch.tensor (W x H)
     """
+    assert k >= 0
 
     with torch.no_grad():
         net.eval()
