@@ -1,20 +1,20 @@
-from torch import nn
+from torch import nn, Tensor
 
 
 class Bayesian_net(nn.Module):
     def __init__(self) -> None:
         super().__init__()
-        self.dropout_state = None
-        self.stochastic_depth_state = None
+        self.dropout_state: bool = False
+        self.stochastic_depth_state: bool = False
 
     def _toggle_dropout(self) -> None:
-        if self.dropout_state == True:
+        if self.dropout_state:
             for m in self.modules():
                 if m.__class__.__name__.startswith("Dropout"):
                     m.train()
 
     def _toggle_stochastic_depth(self) -> None:
-        if self.stochastic_depth_state == True:
+        if self.stochastic_depth_state:
             for m in self.modules():
                 if m.__class__.__name__.startswith("StochasticDepth"):
                     m.train()
@@ -37,3 +37,12 @@ class Bayesian_net(nn.Module):
             raise ValueError(
                 f"mode must be dropout, stochastic_depth, or all, got {mode}"
             )
+
+    def forward(self, x: Tensor) -> Tensor:
+        self._toggle_stochastic_depth()
+        self._toggle_dropout()
+
+        return self._forward_impl(x)
+
+    def _forward_impl(self, x: Tensor) -> Tensor:
+        raise NotImplementedError
