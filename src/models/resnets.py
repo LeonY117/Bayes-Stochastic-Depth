@@ -316,7 +316,7 @@ class _ResNet(Bayesian_net):
         num_layers = num_layers * 2 + 2
         return num_layers
 
-    def forward(self, x: Tensor) -> Tensor:
+    def _forward_impl(self, x: Tensor) -> Tensor:
         x = self.conv1(x)
         x = self.bn1(x)
         x = self.relu(x)
