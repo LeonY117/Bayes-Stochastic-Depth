@@ -43,6 +43,13 @@ def parse_scheduler(
         scheduler = optim.lr_scheduler.ExponentialLR(
             optimizer, gamma=kwargs.get("gamma", 0.9)
         )
+    elif scheduler_name == "multistep":
+        scheduler = optim.lr_scheduler.MultiStepLR(
+            optimizer,
+            milestones=kwargs.get(
+                "milestones", [150, 225], gamma=kwargs.get("gamma", 0.1)
+            ),
+        )
     else:
         scheduler = optim.lr_scheduler.ConstantLR(
             optimizer, total_iters=total_epochs, factor=1
