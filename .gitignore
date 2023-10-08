@@ -1,5 +1,6 @@
 # dataset
 data/*
+results/*
 # google drive
 .tmp.drivedownload*
 .tmp.driveupload*
