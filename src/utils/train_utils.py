@@ -4,7 +4,7 @@ from utils.loss import CELoss, FocalLoss
 
 from typing import List
 
-__all__ = ["parse_scheduler", "parse_loss", "get_dataset_classes"]
+__all__ = ["parse_scheduler", "parse_loss", "parse_optimizer", "get_dataset_classes"]
 
 
 def get_dataset_classes(dataset: str) -> List[str]:
@@ -27,6 +27,26 @@ def get_dataset_classes(dataset: str) -> List[str]:
     return classes
 
 
+def parse_optimizer(
+    model, optimizer_name: str, lr: float, weight_decay: float, **kwargs
+):
+    """
+    Parse the optimizer name and return the optimizer
+    """
+    if optimizer_name == "sgd":
+        optimizer = optim.SGD(
+            model.parameters(),
+            lr=lr,
+            momentum=kwargs.get("momentum", 0.9),
+            weight_decay=weight_decay,
+        )
+    elif optimizer_name == "rmsprop":
+        optimizer = optim.RMSprop(model.parameters(), weight_decay=weight_decay, lr=lr)
+    else:
+        raise ValueError(f"Optimizer {optimizer_name} not supported")
+    return optimizer
+
+
 def parse_scheduler(
     optimizer, scheduler_name: str, total_epochs=Optional[float], **kwargs
 ):
@@ -46,9 +66,8 @@ def parse_scheduler(
     elif scheduler_name == "multistep":
         scheduler = optim.lr_scheduler.MultiStepLR(
             optimizer,
-            milestones=kwargs.get(
-                "milestones", [150, 225], gamma=kwargs.get("gamma", 0.1)
-            ),
+            milestones=kwargs.get("milestones", [150, 225]),
+            gamma=kwargs.get("gamma", 0.1),
         )
     else:
         scheduler = optim.lr_scheduler.ConstantLR(
