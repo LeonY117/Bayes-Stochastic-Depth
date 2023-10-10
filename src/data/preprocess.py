@@ -12,17 +12,15 @@ from .memory_dataset import MemoryDataset
 __all__ = ["get_dataset"]
 
 
-# class _PreprocessTransforms(object):
-#     def __init__(self):
-#         self.to_tensor = transforms.ToTensor()
+class _PreprocessTransforms(object):
+    def __init__(self):
+        self.to_tensor = transforms.ToTensor()
 
-#         # self.normalize = transforms.Normalize(0.5, 0.5)
-
-#     def __call__(self, x):
-#         # x, y = sample
-#         x = self.to_tensor(x)
-#         x = x.to(torch.float)
-#         return x
+    def __call__(self, x):
+        # x, y = sample
+        x = self.to_tensor(x)
+        x = x.to(torch.float)
+        return x
 
 
 def _train_val_split(train_set, train_ratio=0.9, deterministic=True):
@@ -43,7 +41,7 @@ def _move_dataset_to_device(
     dataset: Dataset, device: "str" = "cuda:0"
 ) -> Tuple[Tensor, Tensor]:
     """
-    Takes a dataset object and loads everything onto the gpu
+    Takes a dataset object and loads everything onto device
     """
     # placeholder tensors
     c, H, W = dataset[0][0].shape
@@ -62,8 +60,12 @@ def _load_CIFAR_from_dir(dir: str) -> Dict[str, datasets.CIFAR10]:
     """
     Loads CIFAR10 from the given directory, and splits it into train, val, and test sets. No transforms are applied.
     """
-    trainset = datasets.CIFAR10(root=dir, train=True, download=True, transform=None)
-    testset = datasets.CIFAR10(root=dir, train=False, download=True, transform=None)
+    trainset = datasets.CIFAR10(
+        root=dir, train=True, download=True, transform=_PreprocessTransforms()
+    )
+    testset = datasets.CIFAR10(
+        root=dir, train=False, download=True, transform=_PreprocessTransforms()
+    )
 
     trainset, valset = _train_val_split(trainset, train_ratio=0.9, deterministic=True)
 
@@ -92,29 +94,23 @@ def get_dataset(
             [
                 transforms.RandomCrop(32, padding=4),
                 transforms.RandomHorizontalFlip(),
-                transforms.ToTensor(),
                 transforms.Normalize(
                     (0.4914, 0.4822, 0.4465), (0.2470, 0.2435, 0.2616)
                 ),
             ]
         )
         test_transforms = transforms.Compose(
-            [
-                transforms.ToTensor(),
-                transforms.Normalize(
-                    (0.4914, 0.4822, 0.4465), (0.2470, 0.2435, 0.2616)
-                ),
-            ]
+            [transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2470, 0.2435, 0.2616))]
         )
 
         datasets = _load_CIFAR_from_dir(dir)
         X, Y = _move_dataset_to_device(datasets["train"], device)
-        datasets["train"] = MemoryDataset(X, Y, train_transforms)
+        datasets["train"] = MemoryDataset(X, Y, x_transform=train_transforms)
 
         X, Y = _move_dataset_to_device(datasets["val"], device)
-        datasets["val"] = MemoryDataset(X, Y, test_transforms)
+        datasets["val"] = MemoryDataset(X, Y, x_transform=test_transforms)
 
         X, Y = _move_dataset_to_device(datasets["test"], device)
-        datasets["test"] = MemoryDataset(X, Y, test_transforms)
+        datasets["test"] = MemoryDataset(X, Y, x_transform=test_transforms)
 
     return datasets

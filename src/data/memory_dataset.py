@@ -9,7 +9,9 @@ class MemoryDataset(Dataset):
         self,
         X: Tensor,
         Y: Tensor,
-        transform: Optional[transforms.Compose] = None,
+        unified_transform: Optional[transforms.Compose] = None,
+        x_transform: Optional[transforms.Compose] = None,
+        y_transform: Optional[transforms.Compose] = None,
     ) -> None:
         """
         Loads dataset from memory
@@ -22,14 +24,22 @@ class MemoryDataset(Dataset):
         """
         self.X = X
         self.Y = Y
-        self.transform = transform
+        self.unified_transform = unified_transform
+
+        self.x_transform = x_transform
+        self.y_transform = y_transform
 
     def __len__(self) -> int:
         return self.X.shape[0]
 
     def __getitem__(self, idx: int) -> Tuple[Tensor, Tensor]:
         x, y = self.X[idx], self.Y[idx]
-        if self.transform:
+        if self.unified_transform:
             # x, y = self.transform((x, y))
-            x, y = self.transform(x, y)  # to be consistent with torch
+            return self.unified_transform(x, y)  # to be consistent with torch
+
+        if self.x_transform:
+            x = self.x_transform(x)
+        if self.y_transform:
+            y = self.y_transform(y)
         return x, y
