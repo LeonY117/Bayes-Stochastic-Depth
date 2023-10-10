@@ -119,6 +119,9 @@ class Bottleneck(nn.Module):
         self.downsample = downsample  # to match dimensions when downsampling
         self.stride = stride
 
+        self.dropout = nn.Dropout2d(self.dropout_p)
+        self.sd = StochasticDepth(self.sd_p, "row")
+
     def forward(self, x: Tensor) -> Tensor:
         out = self.conv1(x)
         out = self.bn1(out)
@@ -127,6 +130,10 @@ class Bottleneck(nn.Module):
         out = self.conv2(out)
         out = self.bn2(out)
         out = self.relu(out)
+
+        if self.dropout_p > 0.0:
+            # dropout: randomly zeros units of out
+            out = self.dropout(out)
 
         out = self.conv3(out)
         out = self.bn3(out)
@@ -139,9 +146,7 @@ class Bottleneck(nn.Module):
             out = self.sd(out)
         # add residual
         out += x
-        if self.dropout_p > 0.0:
-            # dropout: randomly zeros units of out
-            out = self.dropout(out)
+
         out = self.relu(out)
         return out
 
