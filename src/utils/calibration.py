@@ -6,7 +6,7 @@ from torch import nn, Tensor
 from torch.utils.data import DataLoader
 
 from tqdm import tqdm
-from .bayesian_utils import bayes_eval
+from .bayesian import bayes_eval
 
 __all__ = [
     "compute_calibration_errors",
