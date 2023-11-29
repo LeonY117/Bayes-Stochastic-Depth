@@ -1,6 +1,6 @@
 import torch.optim as optim
 from typing import Optional
-from utils.loss import CELoss, FocalLoss
+from training.loss import CELoss, FocalLoss
 
 from typing import List
 
