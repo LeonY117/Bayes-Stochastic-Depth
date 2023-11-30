@@ -88,6 +88,7 @@ def get_dataset(
     dataset_name: str, dir: str, device: Optional[str] = None
 ) -> Dict[str, MemoryDataset]:
     assert dataset_name in ["cifar10"]
+    print('loading dataset into memory...')
 
     if dataset_name == "cifar10":
         train_transforms = transforms.Compose(
