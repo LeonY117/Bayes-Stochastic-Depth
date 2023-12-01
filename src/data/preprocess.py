@@ -63,13 +63,13 @@ def _load_CIFAR_from_dir(dir: str) -> Dict[str, datasets.CIFAR10]:
     trainset = datasets.CIFAR10(
         root=dir, train=True, download=True, transform=_PreprocessTransforms()
     )
-    testset = datasets.CIFAR10(
+    valset = datasets.CIFAR10(
         root=dir, train=False, download=True, transform=_PreprocessTransforms()
     )
 
-    trainset, valset = _train_val_split(trainset, train_ratio=0.9, deterministic=True)
+    # trainset, valset = _train_val_split(trainset, train_ratio=0.9, deterministic=True)
 
-    return {"train": trainset, "val": valset, "test": testset}
+    return {"train": trainset, "val": valset}
 
 
 # def load_CIFAR(
@@ -88,7 +88,6 @@ def get_dataset(
     dataset_name: str, dir: str, device: Optional[str] = None
 ) -> Dict[str, MemoryDataset]:
     assert dataset_name in ["cifar10"]
-    print('loading dataset into memory...')
 
     if dataset_name == "cifar10":
         train_transforms = transforms.Compose(
@@ -105,13 +104,14 @@ def get_dataset(
         )
 
         datasets = _load_CIFAR_from_dir(dir)
+        print('loading dataset into memory...')
         X, Y = _move_dataset_to_device(datasets["train"], device)
         datasets["train"] = MemoryDataset(X, Y, x_transform=train_transforms)
 
         X, Y = _move_dataset_to_device(datasets["val"], device)
         datasets["val"] = MemoryDataset(X, Y, x_transform=test_transforms)
 
-        X, Y = _move_dataset_to_device(datasets["test"], device)
-        datasets["test"] = MemoryDataset(X, Y, x_transform=test_transforms)
+        # X, Y = _move_dataset_to_device(datasets["test"], device)
+        # datasets["test"] = MemoryDataset(X, Y, x_transform=test_transforms)
 
     return datasets
