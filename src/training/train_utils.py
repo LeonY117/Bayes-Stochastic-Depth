@@ -42,6 +42,8 @@ def parse_optimizer(
         )
     elif optimizer_name == "rmsprop":
         optimizer = optim.RMSprop(model.parameters(), weight_decay=weight_decay, lr=lr)
+    elif optimizer_name == "adam":
+        optimizer = optim.Adam(model.parameters(), weight_decay=weight_decay, lr=lr)
     else:
         raise ValueError(f"Optimizer {optimizer_name} not supported")
     return optimizer
