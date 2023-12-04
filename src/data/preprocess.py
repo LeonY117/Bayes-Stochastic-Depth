@@ -9,7 +9,7 @@ from tqdm import tqdm
 
 from .memory_dataset import MemoryDataset
 
-__all__ = ["get_dataset"]
+__all__ = ["get_dataset", "get_cifar10_dataset"]
 
 
 class _PreprocessTransforms(object):
@@ -47,7 +47,7 @@ def _move_dataset_to_device(
     c, H, W = dataset[0][0].shape
     n = len(dataset)
     X = torch.zeros((n, c, H, W), dtype=torch.float, device=device, requires_grad=False)
-    Y = torch.zeros((n), dtype=torch.float, device=device, requires_grad=False)
+    Y = torch.zeros((n), dtype=torch.long, device=device, requires_grad=False)
 
     for i, (x, y) in enumerate(tqdm(dataset)):
         X[i] = x.to(device)
@@ -58,18 +58,18 @@ def _move_dataset_to_device(
 
 def _load_CIFAR_from_dir(dir: str) -> Dict[str, datasets.CIFAR10]:
     """
-    Loads CIFAR10 from the given directory, and splits it into train, val, and test sets. No transforms are applied.
+    Loads CIFAR10 from the given directory, use test set as val set
     """
     trainset = datasets.CIFAR10(
         root=dir, train=True, download=True, transform=_PreprocessTransforms()
     )
-    valset = datasets.CIFAR10(
+    testset = datasets.CIFAR10(
         root=dir, train=False, download=True, transform=_PreprocessTransforms()
     )
 
     # trainset, valset = _train_val_split(trainset, train_ratio=0.9, deterministic=True)
 
-    return {"train": trainset, "val": valset}
+    return {"train": trainset, "test": testset}
 
 
 # def load_CIFAR(
@@ -104,7 +104,7 @@ def get_dataset(
         )
 
         datasets = _load_CIFAR_from_dir(dir)
-        print('loading dataset into memory...')
+        print("loading dataset into memory...")
         X, Y = _move_dataset_to_device(datasets["train"], device)
         datasets["train"] = MemoryDataset(X, Y, x_transform=train_transforms)
 
@@ -113,5 +113,20 @@ def get_dataset(
 
         # X, Y = _move_dataset_to_device(datasets["test"], device)
         # datasets["test"] = MemoryDataset(X, Y, x_transform=test_transforms)
+
+    return datasets
+
+
+def get_cifar10_dataset(
+    dir: str, train_transforms, test_transforms, device: Optional[str] = "cpu"
+) -> Dict[str, MemoryDataset]:
+    datasets = _load_CIFAR_from_dir(dir)
+    print("loading dataset into memory...")
+    if device != "cpu":
+        X, Y = _move_dataset_to_device(datasets["train"], device)
+        datasets["train"] = MemoryDataset(X, Y, train_transforms)
+
+        X, Y = _move_dataset_to_device(datasets["test"], device)
+        datasets["test"] = MemoryDataset(X, Y, test_transforms)
 
     return datasets
