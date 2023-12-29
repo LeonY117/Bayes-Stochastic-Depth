@@ -5,6 +5,8 @@ results/*
 .tmp.drivedownload*
 .tmp.driveupload*
 .DS_Store
+# Others
+local_notebooks/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
